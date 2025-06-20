@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+require "fileutils"
+require "yaml"
+
+# Kill entire process group on exit
+Signal.trap("INT") { 
+  Process.kill("-INT", Process.pid)
+  exit
+}
+
+Signal.trap("TERM") {
+  Process.kill("-TERM", Process.pid)
+  exit
+}
+
+def log(msg)
+  puts "\033[0;34m[compass-dev]\033[0m #{msg}"
+end
+
+def run_process(name, command)
+  IO.popen(command) do |io|
+    io.each_line do |line|
+      puts "\033[0;32m[#{name}]\033[0m #{line}"
+    end
+  end
+rescue Errno::ENOENT => e
+  log "Failed to start #{name}: #{e.message}"
+  exit 1
+end
+
+# Read Procfile.dev
+procfile = File.read(File.join(File.dirname(__FILE__), "..", "Procfile.dev"))
+processes = {}
+
+# Parse Procfile format
+procfile.each_line do |line|
+  if line =~ /^([A-Za-z0-9_]+):\s*(.+)$/
+    processes[$1] = $2.strip
+  end
+end
+
+# Start each process
+pids = []
+processes.each do |name, command|
+  pid = fork do
+    run_process(name, command)
+  end
+  pids << pid
+  log "Started #{name} (pid: #{pid})"
+end
+
+# Wait for all processes
+begin
+  pids.each do |pid|
+    Process.waitpid(pid)
+  end
+rescue Interrupt
+  log "Shutting down..."
+  pids.each do |pid|
+    begin
+      Process.kill("TERM", pid)
+    rescue Errno::ESRCH
+    end
+  end
+  exit
+end

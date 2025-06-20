@@ -1,0 +1,114 @@
+<!-- Dashboard Overview -->
+<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+  <!-- Open Positions Card -->
+  <div class="dashboard-stat-card">
+    <div class="dashboard-stat-card-header">
+      <dt class="text-sm font-medium text-gray-500 truncate">
+        Open Positions
+      </dt>
+      <dd class="mt-1 text-3xl font-semibold text-gray-900">
+        12
+      </dd>
+    </div>
+    <div class="dashboard-stat-card-footer">
+      <div class="text-sm">
+        <a href="<%= position_management_index_path %>" class="font-medium text-primary hover:text-primary-dark">
+          View all positions →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Applications Card -->
+  <div class="dashboard-stat-card">
+    <div class="dashboard-stat-card-header">
+      <dt class="text-sm font-medium text-gray-500 truncate">
+        Active Applications
+      </dt>
+      <dd class="mt-1 text-3xl font-semibold text-gray-900">
+        48
+      </dd>
+    </div>
+    <div class="dashboard-stat-card-footer">
+      <div class="text-sm">
+        <a href="<%= review_applicants_path %>" class="font-medium text-primary hover:text-primary-dark">
+          Review applications →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interviews This Week Card -->
+  <div class="dashboard-stat-card">
+    <div class="dashboard-stat-card-header">
+      <dt class="text-sm font-medium text-gray-500 truncate">
+        Interviews This Week
+      </dt>
+      <dd class="mt-1 text-3xl font-semibold text-gray-900">
+        8
+      </dd>
+    </div>
+    <div class="dashboard-stat-card-footer">
+      <div class="text-sm">
+        <a href="<%= pipeline_index_path %>" class="font-medium text-primary hover:text-primary-dark">
+          View pipeline →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Offers Pending Card -->
+  <div class="dashboard-stat-card">
+    <div class="dashboard-stat-card-header">
+      <dt class="text-sm font-medium text-gray-500 truncate">
+        Offers Pending
+      </dt>
+      <dd class="mt-1 text-3xl font-semibold text-gray-900">
+        3
+      </dd>
+    </div>
+    <div class="dashboard-stat-card-footer">
+      <div class="text-sm">
+        <a href="<%= pipeline_index_path %>" class="font-medium text-primary hover:text-primary-dark">
+          View offers →
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="mt-8">
+  <h2 class="text-lg font-medium text-gray-900">Recent Activity</h2>
+  <div class="mt-4 card">
+    <div class="divide-y divide-gray-200">
+      <div class="py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-900">New application received</p>
+            <p class="text-sm text-gray-500">Senior Software Engineer position</p>
+          </div>
+          <p class="text-sm text-gray-500">2 hours ago</p>
+        </div>
+      </div>
+      <div class="py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-900">Interview scheduled</p>
+            <p class="text-sm text-gray-500">Product Designer position</p>
+          </div>
+          <p class="text-sm text-gray-500">5 hours ago</p>
+        </div>
+      </div>
+      <div class="py-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-900">Offer accepted</p>
+            <p class="text-sm text-gray-500">Marketing Manager position</p>
+          </div>
+          <p class="text-sm text-gray-500">Yesterday</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
