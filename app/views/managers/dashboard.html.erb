@@ -1,0 +1,121 @@
+<div class="container mx-auto px-4 py-6">
+  <%# Header %>
+  <h1 class="text-3xl font-bold text-gray-800 mb-6">Manager Dashboard</h1>
+
+  <%# Stats Cards %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <%# Total Staff Card %>
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="text-blue-600 text-lg font-semibold mb-2">Total Staff</div>
+      <div class="text-3xl font-bold"><%= @total_staff %></div>
+      <div class="text-gray-500 text-sm">Active workers</div>
+    </div>
+
+    <%# Clocked In Staff Card %>
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="text-green-600 text-lg font-semibold mb-2">Clocked In</div>
+      <div class="text-3xl font-bold"><%= @clocked_in_staff %></div>
+      <div class="text-gray-500 text-sm">Currently working</div>
+    </div>
+
+    <%# Today's Shifts Card %>
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="text-blue-600 text-lg font-semibold mb-2">Today's Shifts</div>
+      <div class="text-3xl font-bold"><%= @todays_shifts.count %></div>
+      <div class="text-gray-500 text-sm">Scheduled today</div>
+    </div>
+
+    <%# Open Shifts Card %>
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="text-red-600 text-lg font-semibold mb-2">Open Shifts</div>
+      <div class="text-3xl font-bold"><%= @open_shifts.count %></div>
+      <div class="text-gray-500 text-sm">Need coverage</div>
+    </div>
+  </div>
+
+<%# Quick Actions %>
+<div class="mb-8">
+  <%= link_to "View Full Schedule", managers_schedule_path, class: "bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-200 inline-block" %>
+</div>
+
+  <%# Quick Actions Section %>
+  <div class="bg-white rounded-lg shadow p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+    <div class="flex gap-4">
+      <%= link_to "View Full Schedule", managers_schedule_path, 
+          class: "bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700" %>
+    </div>
+  </div>
+
+  <%# Today's Schedule Section %>
+  <div class="bg-white rounded-lg shadow mb-8">
+    <div class="border-b border-gray-200 p-6">
+      <h2 class="text-xl font-semibold text-gray-800">Today's Schedule</h2>
+    </div>
+    <div class="p-6">
+      <% if @todays_shifts.any? %>
+        <div class="grid gap-4">
+          <% @todays_shifts.each do |shift| %>
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div class="mb-2 md:mb-0">
+                  <div class="font-semibold"><%= shift.role %></div>
+                  <div class="text-gray-500 text-sm">
+                    <%= shift.start_time.strftime("%I:%M %p") %> - <%= shift.end_time.strftime("%I:%M %p") %>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <div class="text-sm mr-4">
+                    <% if shift.assigned_user %>
+                      <span class="text-green-600">
+                        <%= shift.assigned_user.full_name %>
+                      </span>
+                    <% else %>
+                      <span class="text-red-600">Unassigned</span>
+                    <% end %>
+                  </div>
+                  <div class="text-sm text-gray-500"><%= shift.location %></div>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-gray-500 text-center py-4">No shifts scheduled for today</div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Open Shifts Section %>
+  <div class="bg-white rounded-lg shadow">
+    <div class="border-b border-gray-200 p-6">
+      <h2 class="text-xl font-semibold text-gray-800">Open Shifts Need Coverage</h2>
+    </div>
+    <div class="p-6">
+      <% if @open_shifts.any? %>
+        <div class="grid gap-4">
+          <% @open_shifts.each do |shift| %>
+            <div class="border rounded-lg p-4 hover:bg-gray-50">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div class="mb-2 md:mb-0">
+                  <div class="font-semibold text-red-600"><%= shift.role %></div>
+                  <div class="text-gray-500 text-sm">
+                    <%= shift.start_time.strftime("%B %d, %I:%M %p") %>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <div class="text-sm text-gray-500"><%= shift.location %></div>
+                  <button class="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
+                    Assign Staff
+                  </button>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-gray-500 text-center py-4">No open shifts available</div>
+      <% end %>
+    </div>
+  </div>
+</div>

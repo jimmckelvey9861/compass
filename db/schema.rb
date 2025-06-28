@@ -10,9 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_19_141150) do
+ActiveRecord::Schema[7.0].define(version: 2025_06_25_144823) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "applications", force: :cascade do |t|
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "job_positions", force: :cascade do |t|
+    t.string "title"
+    t.string "status"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "organizations", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
 
   create_table "positions", force: :cascade do |t|
     t.string "company_name", null: false
@@ -30,6 +49,48 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_19_141150) do
     t.index ["company_name"], name: "index_positions_on_company_name"
     t.index ["location"], name: "index_positions_on_location"
     t.index ["title"], name: "index_positions_on_title"
+  end
+
+  create_table "shifts", force: :cascade do |t|
+    t.integer "organization_id"
+    t.integer "assigned_user_id"
+    t.datetime "start_time"
+    t.datetime "end_time"
+    t.string "role"
+    t.string "location"
+    t.string "status", default: "scheduled"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_user_id"], name: "index_shifts_on_assigned_user_id"
+    t.index ["organization_id"], name: "index_shifts_on_organization_id"
+    t.index ["start_time"], name: "index_shifts_on_start_time"
+  end
+
+  create_table "timesheets", force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "shift_id"
+    t.datetime "clock_in_time"
+    t.datetime "clock_out_time"
+    t.string "status", default: "pending"
+    t.decimal "hours_worked", precision: 10, scale: 2
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["shift_id"], name: "index_timesheets_on_shift_id"
+    t.index ["user_id"], name: "index_timesheets_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email"
+    t.string "full_name"
+    t.string "role"
+    t.integer "organization_id"
+    t.decimal "hourly_rate"
+    t.string "position"
+    t.string "phone"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_users_on_email"
+    t.index ["organization_id"], name: "index_users_on_organization_id"
   end
 
 end

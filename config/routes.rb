@@ -1,80 +1,66 @@
 Rails.application.routes.draw do
-  # Root route - redirects to dashboard
+  # Root route
   root 'dashboard#index'
 
-  # Dashboard routes
-  get '/dashboard', to: 'dashboard#index', as: :dashboard
+  # Managers routes
+  get '/managers/dashboard', to: 'managers#dashboard', as: :managers_dashboard
+  get '/managers/schedule', to: 'managers#schedule', as: :managers_schedule
 
   # Position Management routes
-  resources :positions, path: 'position-management', as: :position_management do
-    collection do
-      get '/', to: 'positions#index'
-      get '/new', to: 'positions#new'
-      post '/create', to: 'positions#create'
-    end
+  resources :positions do
     member do
-      get '/edit', to: 'positions#edit'
-      patch '/update', to: 'positions#update'
-      delete '/delete', to: 'positions#destroy'
+      patch :update_status
     end
   end
 
   # Job Posting routes
-  resources :job_posts, path: 'job-posting', as: :job_posting do
-    collection do
-      get '/', to: 'job_posts#index'
-      get '/new', to: 'job_posts#new'
-      post '/create', to: 'job_posts#create'
-    end
-    member do
-      get '/edit', to: 'job_posts#edit'
-      patch '/update', to: 'job_posts#update'
-      delete '/delete', to: 'job_posts#destroy'
-    end
-  end
+  resources :job_posts
 
   # Pipeline routes
-  resources :pipeline, path: 'pipeline', as: :pipeline do
+  resources :pipelines do
     collection do
-      get '/', to: 'pipeline#index'
-      get '/kanban', to: 'pipeline#kanban'
-      get '/list', to: 'pipeline#list'
+      get :kanban
+      get :list
     end
     member do
-      patch '/update_stage', to: 'pipeline#update_stage'
+      patch :update_stage
     end
   end
 
   # Review Applicants routes
-  resources :applicants, path: 'review-applicants', as: :review_applicants do
+  resources :applicants do
     collection do
-      get '/', to: 'applicants#index'
-      get '/search', to: 'applicants#search'
-      get '/filter', to: 'applicants#filter'
+      get :search
+      get :filter
     end
     member do
-      get '/show', to: 'applicants#show'
-      patch '/update_status', to: 'applicants#update_status'
-      post '/add_note', to: 'applicants#add_note'
+      patch :update_status
+      post :add_note
     end
   end
 
   # Settings routes
   namespace :settings do
-    get '/', to: 'settings#index'
+    root to: 'settings#index'
     
-    resources :workflow, only: [:index, :create, :update, :destroy]
+    resources :workflows, only: [:index, :create, :update, :destroy]
     resources :templates, only: [:index, :create, :update, :destroy]
     resources :team_members, only: [:index, :create, :update, :destroy]
     
     # API Integrations
-    get '/integrations', to: 'integrations#index'
-    post '/integrations/:provider/connect', to: 'integrations#connect'
-    delete '/integrations/:provider/disconnect', to: 'integrations#disconnect'
+    resources :integrations, only: [:index] do
+      member do
+        post :connect
+        delete :disconnect
+      end
+    end
     
     # Notifications
-    get '/notifications', to: 'notifications#index'
-    patch '/notifications/update', to: 'notifications#update'
+    resources :notifications, only: [:index] do
+      collection do
+        patch :update
+      end
+    end
   end
 
   # Health check route for monitoring
