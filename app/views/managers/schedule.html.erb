@@ -69,7 +69,20 @@
                 <div class="absolute left-0 right-0 mx-2 p-2 rounded border <%= color_class %>"
                      style="min-height: <%= [duration * 80, 60].max %>px">
                   <div class="text-sm font-medium truncate">
-                    <%= shift.assigned_user&.full_name || 'Unassigned' %>
+                    <% if shift.assigned_user %>
+                      <%= shift.assigned_user.full_name %>
+                    <% else %>
+                      <div class="text-amber-700">Unassigned</div>
+                      <%= form_tag assign_shift_path(shift), class: "inline-flex items-center gap-1 mt-1" do %>
+                        <%= select_tag "user_id", 
+                            options_from_collection_for_select(@available_workers, :id, :full_name),
+                            class: "text-xs py-0.5 px-1 rounded border border-gray-300",
+                            style: "height: 24px;" %>
+                        <%= button_tag "Assign", 
+                            class: "text-xs bg-blue-500 text-white py-0.5 px-2 rounded hover:bg-blue-600",
+                            style: "height: 24px;" %>
+                      <% end %>
+                    <% end %>
                   </div>
                   <div class="text-xs text-gray-600 truncate">
                     <%= shift.role.titleize %>

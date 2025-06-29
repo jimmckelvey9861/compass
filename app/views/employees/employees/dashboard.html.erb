@@ -1,0 +1,76 @@
+<div class="min-h-screen bg-gray-50 p-4">
+  <%# Welcome Header %>
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      Welcome, <%= @current_user.full_name %>
+    </h1>
+  </div>
+
+  <%# Clock In/Out Button %>
+  <div class="flex justify-center mb-8">
+    <% if @current_timesheet %>
+      <%= button_to employees_clock_out_path,
+          class: "w-full max-w-sm rounded-xl bg-red-600 px-8 py-8 text-2xl font-semibold text-white shadow-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2",
+          method: :post do %>
+        Clock Out
+      <% end %>
+    <% else %>
+      <%= button_to employees_clock_in_path,
+          class: "w-full max-w-sm rounded-xl bg-green-600 px-8 py-8 text-2xl font-semibold text-white shadow-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2",
+          method: :post do %>
+        Clock In
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# Current Shift Info %>
+  <% if @current_shift %>
+    <div class="mb-8 rounded-lg bg-white p-4 shadow">
+      <h2 class="mb-2 text-lg font-semibold text-gray-900">Current Shift</h2>
+      <div class="space-y-2 text-gray-600">
+        <p>
+          <span class="font-medium">Time:</span>
+          <%= @current_shift.start_time.strftime("%I:%M %p") %> - 
+          <%= @current_shift.end_time.strftime("%I:%M %p") %>
+        </p>
+        <p>
+          <span class="font-medium">Location:</span>
+          <%= @current_shift.location %>
+        </p>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Upcoming Shifts %>
+  <div class="rounded-lg bg-white p-4 shadow mb-8">
+    <h2 class="mb-4 text-lg font-semibold text-gray-900">Upcoming Shifts</h2>
+    <% if @upcoming_shifts.any? %>
+      <div class="divide-y divide-gray-200">
+        <% @upcoming_shifts.each do |shift| %>
+          <div class="py-3">
+            <div class="font-medium text-gray-900">
+              <%= shift.start_time.strftime("%A, %B %d") %>
+            </div>
+            <div class="mt-1 text-sm text-gray-600">
+              <%= shift.start_time.strftime("%I:%M %p") %> - 
+              <%= shift.end_time.strftime("%I:%M %p") %>
+            </div>
+            <div class="mt-1 text-sm text-gray-500">
+              <%= shift.location %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-gray-500">No upcoming shifts scheduled</p>
+    <% end %>
+  </div>
+
+  <%# Weekly Hours %>
+  <div class="rounded-lg bg-white p-4 shadow">
+    <h2 class="mb-4 text-lg font-semibold text-gray-900">Weekly Summary</h2>
+    <div class="text-3xl font-bold text-gray-900">
+      Hours This Week: <%= @week_hours %>
+    </div>
+  </div>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_25_144823) do
+ActiveRecord::Schema[7.0].define(version: 2025_06_29_152320) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -64,6 +64,20 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_25_144823) do
     t.index ["assigned_user_id"], name: "index_shifts_on_assigned_user_id"
     t.index ["organization_id"], name: "index_shifts_on_organization_id"
     t.index ["start_time"], name: "index_shifts_on_start_time"
+  end
+
+  create_table "time_off_requests", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.date "start_date", null: false
+    t.date "end_date", null: false
+    t.string "reason"
+    t.string "status", default: "pending", null: false
+    t.integer "approved_by_id"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status"], name: "index_time_off_requests_on_status"
+    t.index ["user_id"], name: "index_time_off_requests_on_user_id"
   end
 
   create_table "timesheets", force: :cascade do |t|

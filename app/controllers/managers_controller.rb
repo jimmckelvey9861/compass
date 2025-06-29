@@ -42,5 +42,33 @@ class ManagersController < ApplicationController
       organization_id: @organization.id,
       role: 'worker'
     )
+    
+    @available_workers = User.where(organization_id: @organization.id, role: 'worker').select(:id, :full_name)
+  end
+
+  def timesheets
+    @organization = Organization.first
+    @pending_timesheets = Timesheet
+      .joins(:user)
+      .where(
+        users: { organization_id: @organization.id },
+        status: 'pending'
+      )
+      .includes(:user, :shift)
+    
+    @current_period_start = Date.today.beginning_of_week
+    @current_period_end = Date.today.end_of_week
+  end
+
+  def assign_shift
+    @shift = Shift.find(params[:id])
+    
+    if @shift.update(assigned_user_id: params[:user_id])
+      flash[:notice] = "Shift successfully assigned"
+    else
+      flash[:alert] = "Failed to assign shift: #{@shift.errors.full_messages.join(', ')}"
+    end
+
+    redirect_to managers_schedule_path(week_start: @shift.start_time.to_date)
   end
 end

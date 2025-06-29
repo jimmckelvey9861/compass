@@ -1,10 +1,19 @@
 Rails.application.routes.draw do
+  # Employees routes
+  namespace :employees do
+    get 'dashboard', to: 'employees#dashboard'
+    post 'clock_in', to: 'employees#clock_in'
+    post 'clock_out', to: 'employees#clock_out'
+  end
+
   # Root route
   root 'dashboard#index'
 
   # Managers routes
   get '/managers/dashboard', to: 'managers#dashboard', as: :managers_dashboard
   get '/managers/schedule', to: 'managers#schedule', as: :managers_schedule
+  get '/managers/timesheets', to: 'managers#timesheets', as: :managers_timesheets
+  post 'shifts/:id/assign', to: 'managers#assign_shift', as: :assign_shift
 
   # Position Management routes
   resources :positions do
