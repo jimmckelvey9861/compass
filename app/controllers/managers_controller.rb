@@ -33,9 +33,14 @@ class ManagersController < ApplicationController
     @week_start = (params[:week_start] ? Date.parse(params[:week_start]) : Date.current).beginning_of_week
     @week_end = @week_start.end_of_week
     
+    # Get unique locations and selected location
+    @locations = Shift.where(organization_id: @organization.id).distinct.pluck(:location).sort
+    @selected_location = params[:location] || @locations.first
+    
     @shifts = Shift.where(
       organization_id: @organization.id,
-      start_time: @week_start..@week_end
+      start_time: @week_start..@week_end,
+      location: @selected_location
     ).includes(:assigned_user)
     
     @employees = User.where(
@@ -44,6 +49,8 @@ class ManagersController < ApplicationController
     )
     
     @available_workers = User.where(organization_id: @organization.id, role: 'worker').select(:id, :full_name)
+    
+    @jobs = Job.where(organization_id: @organization.id, status: 'active')
   end
 
   def timesheets

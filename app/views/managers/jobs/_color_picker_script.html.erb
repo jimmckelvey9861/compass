@@ -1,0 +1,45 @@
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize color picker
+  const colorPicker = document.getElementById('color-picker');
+  const customInput = document.getElementById('job_color_custom');
+  const preview = document.getElementById('color_preview');
+
+  // Color picker click handling
+  colorPicker.addEventListener('click', function(e) {
+    const label = e.target.closest('label[data-color]');
+    if (!label) return;
+
+    const color = label.dataset.color;
+    
+    // Update custom input and preview
+    customInput.value = color;
+    preview.style.backgroundColor = color;
+
+    // Update radio button
+    document.getElementById('color_' + color.substring(1)).checked = true;
+
+    // Update checkmarks
+    document.querySelectorAll('.checkmark').forEach(mark => mark.classList.add('opacity-0'));
+    label.querySelector('.checkmark').classList.remove('opacity-0');
+  });
+
+  // Custom color input handling
+  customInput.addEventListener('input', function(e) {
+    const color = e.target.value;
+    preview.style.backgroundColor = color;
+    
+    // Clear all radio selections and checkmarks
+    document.querySelectorAll('#color-picker input[type="radio"]').forEach(radio => radio.checked = false);
+    document.querySelectorAll('.checkmark').forEach(mark => mark.classList.add('opacity-0'));
+
+    // If color matches a palette color, select it
+    const matchingLabel = document.querySelector(`label[data-color="${color}"]`);
+    if (matchingLabel) {
+      const radioId = 'color_' + color.substring(1);
+      document.getElementById(radioId).checked = true;
+      matchingLabel.querySelector('.checkmark').classList.remove('opacity-0');
+    }
+  });
+});
+</script>

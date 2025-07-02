@@ -1,0 +1,25 @@
+<div class="sm:col-span-6">
+  <%= f.label :required_languages, class: "block text-sm font-medium text-gray-700" %>
+  <div class="mt-2 space-y-2">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <% Job::AVAILABLE_LANGUAGES.each do |language| %>
+        <div class="relative flex items-start">
+          <div class="flex h-5 items-center">
+            <%= check_box_tag 'job[required_languages][]',
+                language,
+                @job.required_languages&.include?(language),
+                id: "job_required_languages_#{language.parameterize}",
+                class: "h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" %>
+          </div>
+          <div class="ml-3 text-sm">
+            <label for="job_required_languages_<%= language.parameterize %>" class="font-medium text-gray-700">
+              <%= language %>
+            </label>
+          </div>
+        </div>
+      <% end %>
+    </div>
+    <%= hidden_field_tag 'job[required_languages][]', '', id: nil %>
+  </div>
+  <p class="mt-2 text-sm text-gray-500">Select all required languages for this position.</p>
+</div>

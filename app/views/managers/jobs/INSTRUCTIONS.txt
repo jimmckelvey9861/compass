@@ -1,0 +1,2 @@
+# Replace the color picker section in both new.html.erb and edit.html.erb with:
+<%= render 'color_picker', f: f %>

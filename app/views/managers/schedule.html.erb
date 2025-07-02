@@ -3,6 +3,12 @@
   <%# Header Section %>
   <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
     <h1 class="text-2xl font-bold text-gray-800 mb-4 sm:mb-0">Weekly Schedule</h1>
+
+    <%# Location Selector %>
+    <%= form_tag managers_schedule_path, method: :get, class: "mb-4 sm:mb-0" do %>
+      <%= hidden_field_tag :week_start, @week_start %>
+      <%= select_tag :location, options_for_select(@locations, @selected_location), class: "px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 border-0 focus:ring-2 focus:ring-blue-500 text-gray-600", onchange: "this.form.submit();" %>
+    <% end %>
     
     <%# Week Navigation %>
     <div class="flex items-center space-x-4">
@@ -23,83 +29,139 @@
   </div>
 
   <%# Schedule Grid %>
-  <div class="bg-white rounded-lg shadow overflow-x-auto">
-    <div class="min-w-[800px]"> <%# Minimum width to prevent squishing %>
-      <%# Grid Header - Days %>
-      <div class="grid grid-cols-8 border-b">
-        <div class="p-4 border-r bg-gray-50">
-          <span class="text-gray-500 font-medium">Time</span>
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <%# Day Headers %>
+    <div class="grid grid-cols-8 border-b">
+      <div class="p-4 border-r bg-gray-50">
+        <span class="text-gray-500 font-medium">Time</span>
+      </div>
+      
+      <% @week_start.upto(@week_end).each do |date| %>
+        <div class="p-4 border-r bg-gray-50 text-center">
+          <div class="font-medium text-gray-800"><%= date.strftime("%A") %></div>
+          <div class="text-sm text-gray-500"><%= date.strftime("%m/%d") %></div>
         </div>
-        <% @week_start.upto(@week_end).each do |date| %>
-          <div class="p-4 border-r bg-gray-50 text-center">
-            <div class="font-medium text-gray-800"><%= date.strftime("%A") %></div>
-            <div class="text-sm text-gray-500"><%= date.strftime("%m/%d") %></div>
+      <% end %>
+    </div>
+
+    <%# Schedule Content %>
+    <div class="grid relative" style="height: 680px; grid-template-columns: 60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr;">
+      <%# Background grid lines - span all columns %>
+      <div class="absolute inset-0 pointer-events-none">
+        <% (6..23).each do |hour| %>
+          <div class="absolute w-full border-t border-gray-100"
+               style="top: <%= (hour - 6) * 40 %>px">
           </div>
         <% end %>
       </div>
 
-      <%# Time Slots and Shifts %>
-      <% (6..22).each do |hour| %>
-        <div class="grid grid-cols-8 border-b">
-          <%# Time Column %>
-          <div class="p-4 border-r bg-gray-50">
-            <span class="text-gray-500">
-              <%= "#{hour == 12 ? 12 : hour % 12}:00 #{hour >= 12 ? 'PM' : 'AM'}" %>
-            </span>
+      <%# Time labels column %>
+      <div class="border-r relative">
+        <%# Time labels - every hour from 6am to 11pm %>
+        <% (6..23).each do |hour| %>
+          <div class="absolute w-full text-xs text-gray-500 pl-1"
+               style="top: <%= (hour - 6) * 40 %>px">
+            <%= "#{hour == 12 ? 12 : hour % 12}#{hour >= 12 ? 'p' : 'a'}" %>
           </div>
+        <% end %>
+      </div>
 
-          <%# Day Columns %>
-          <% @week_start.upto(@week_end).each do |date| %>
-            <div class="border-r p-2 min-h-[80px] relative">
-              <%# Find shifts that start in this hour %>
-              <% @shifts.select do |shift| 
-                  shift.start_time.to_date == date && 
-                  shift.start_time.hour == hour 
-                end.each do |shift| %>
-                <% 
-                  # Calculate duration in hours
-                  duration = ((shift.end_time - shift.start_time) / 1.hour).round
-                  # Generate background color based on role
-                  color_class = case shift.role
-                    when 'manager' then 'bg-blue-100 border-blue-200'
-                    when 'worker' then 'bg-green-100 border-green-200'
-                    else 'bg-gray-100 border-gray-200'
-                  end
-                %>
-                <div class="absolute left-0 right-0 mx-2 p-2 rounded border <%= color_class %>"
-                     style="min-height: <%= [duration * 80, 60].max %>px">
-                  <div class="text-sm font-medium truncate">
-                    <% if shift.assigned_user %>
-                      <%= shift.assigned_user.full_name %>
-                    <% else %>
-                      <div class="text-amber-700">Unassigned</div>
-                      <%= form_tag assign_shift_path(shift), class: "inline-flex items-center gap-1 mt-1" do %>
-                        <%= select_tag "user_id", 
-                            options_from_collection_for_select(@available_workers, :id, :full_name),
-                            class: "text-xs py-0.5 px-1 rounded border border-gray-300",
-                            style: "height: 24px;" %>
-                        <%= button_tag "Assign", 
-                            class: "text-xs bg-blue-500 text-white py-0.5 px-2 rounded hover:bg-blue-600",
-                            style: "height: 24px;" %>
-                      <% end %>
-                    <% end %>
-                  </div>
-                  <div class="text-xs text-gray-600 truncate">
-                    <%= shift.role.titleize %>
-                  </div>
-                  <div class="text-xs text-gray-500 truncate">
-                    <%= shift.start_time.strftime("%I:%M %p") %> - 
-                    <%= shift.end_time.strftime("%I:%M %p") %>
-                  </div>
-                  <div class="text-xs text-gray-500 truncate">
-                    <%= shift.location %>
-                  </div>
+      <%# Day columns %>
+      <% @week_start.upto(@week_end).each do |date| %>
+        <div class="border-r relative min-h-full flex-1">
+          <%# Shifts for this day %>
+          <%
+            # Group shifts by time slot to detect overlaps
+            day_shifts = @shifts.select { |shift| shift.start_time.to_date == date }
+            
+            # Track overlapping shifts using a more precise method
+            time_slots = {}
+            
+            # First, mark all time slots that each shift occupies
+            day_shifts.each do |shift|
+              start_slot = shift.start_time.hour * 4 + (shift.start_time.min / 15).floor
+              end_slot = shift.end_time.hour * 4 + (shift.end_time.min / 15).ceil
+              
+              (start_slot..end_slot).each do |slot|
+                time_slots[slot] ||= []
+                time_slots[slot] << shift
+              end
+            end
+            
+            # Then, assign positions based on maximum concurrent shifts
+            shift_positions = {}
+            day_shifts.each do |shift|
+              start_slot = shift.start_time.hour * 4 + (shift.start_time.min / 15).floor
+              end_slot = shift.end_time.hour * 4 + (shift.end_time.min / 15).ceil
+              
+              # Find all concurrent shifts
+              concurrent_shifts = (start_slot..end_slot).flat_map { |slot| time_slots[slot] }.uniq
+              concurrent_positions = concurrent_shifts.map { |s| shift_positions[s] }.compact
+              
+              # Assign the lowest available position
+              position = (0..concurrent_shifts.length).find { |i| !concurrent_positions.include?(i) }
+              shift_positions[shift] = position
+            end
+            
+            # Display shifts with calculated positions
+            day_shifts.each do |shift|
+              start_hour = shift.start_time.hour + (shift.start_time.min / 60.0)
+              end_hour = shift.end_time.hour + (shift.end_time.min / 60.0)
+              duration_hours = end_hour - start_hour
+              
+              top_position = ((start_hour - 6) * 40).round
+              height = (duration_hours * 40).round
+              left_offset = shift_positions[shift] * 15  # 15px offset for overlapping shifts
+              
+              # Get colors from job if available
+              bg_color = shift.job&.color || '#E5E7EB'
+
+              # Format name as "FirstName L."
+              if shift.assigned_user
+                name_parts = shift.assigned_user.full_name.split
+                formatted_name = if name_parts.length > 1
+                  "#{name_parts[0]} #{name_parts[-1][0]}."
+                else
+                  name_parts[0]
+                end
+              end
+          %>
+            <div class="absolute rounded cursor-pointer hover:shadow-lg transition-shadow group"
+                 style="top: <%= top_position %>px;
+                        left: <%= left_offset %>px;
+                        width: 15px;
+                        height: <%= height %>px;
+                        background-color: <%= bg_color %>;
+                        border: 1px solid rgba(255, 255, 255, 0.5);">
+              <%# Container for rotated text %>
+              <div class="absolute inset-0 flex items-center justify-center text-xs text-white"
+                   style="transform-origin: center center;">
+                <div style="transform: rotate(-90deg); white-space: nowrap; max-width: <%= height - 8 %>px; padding-left: <%= height / 4 %>px;">
+                  <% if shift.assigned_user %>
+                    <span class="font-medium"><%= formatted_name %></span>
+                  <% else %>
+                    <span class="font-medium">Open</span>
+                  <% end %>
                 </div>
-              <% end %>
+              </div>
+              
+              <%# Hover details - show horizontally %>
+              <div class="absolute left-full top-0 ml-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+                <div class="font-medium">
+                  <%= shift.assigned_user ? shift.assigned_user.full_name : "Unassigned" %>
+                </div>
+                <% if shift.job %>
+                  <div class="text-gray-300"><%= shift.job.name %></div>
+                <% end %>
+                <div class="text-gray-400">
+                  <%= shift.start_time.strftime("%l:%M%P").strip %> - 
+                  <%= shift.end_time.strftime("%l:%M%P").strip %>
+                </div>
+              </div>
             </div>
-          <% end %>
+          <% end # end day_shifts.each %>
         </div>
-      <% end %>
+      <% end # end week loop %>
     </div>
   </div>
 
@@ -107,17 +169,15 @@
   <div class="mt-6 bg-white rounded-lg shadow p-4">
     <h3 class="text-lg font-medium text-gray-800 mb-3">Legend</h3>
     <div class="flex flex-wrap gap-4">
+      <% @jobs.each do |job| %>
+        <div class="flex items-center">
+          <div class="w-4 h-4 rounded mr-2" style="background-color: <%= job.color %>; border: 1px solid rgba(255, 255, 255, 0.5);"></div>
+          <span class="text-sm text-gray-600"><%= job.name %></span>
+        </div>
+      <% end %>
       <div class="flex items-center">
-        <div class="w-4 h-4 bg-blue-100 border border-blue-200 rounded mr-2"></div>
-        <span class="text-sm text-gray-600">Manager Shift</span>
-      </div>
-      <div class="flex items-center">
-        <div class="w-4 h-4 bg-green-100 border border-green-200 rounded mr-2"></div>
-        <span class="text-sm text-gray-600">Worker Shift</span>
-      </div>
-      <div class="flex items-center">
-        <div class="w-4 h-4 bg-gray-100 border border-gray-200 rounded mr-2"></div>
-        <span class="text-sm text-gray-600">Other Shifts</span>
+        <div class="w-4 h-4 bg-gray-300 rounded mr-2" style="border: 1px solid rgba(255, 255, 255, 0.5);"></div>
+        <span class="text-sm text-gray-600">Unassigned</span>
       </div>
     </div>
   </div>

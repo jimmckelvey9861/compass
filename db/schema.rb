@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2025_06_29_152320) do
+ActiveRecord::Schema[7.0].define(version: 2025_07_02_113037) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -25,6 +25,36 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_29_152320) do
     t.string "status"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "job_qualifications", force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.integer "job_id", null: false
+    t.boolean "certified", default: false
+    t.date "certified_date"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["job_id"], name: "index_job_qualifications_on_job_id"
+    t.index ["user_id", "job_id"], name: "index_job_qualifications_on_user_id_and_job_id", unique: true
+    t.index ["user_id"], name: "index_job_qualifications_on_user_id"
+  end
+
+  create_table "jobs", force: :cascade do |t|
+    t.integer "organization_id", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.text "required_skills"
+    t.integer "min_experience_months", default: 0
+    t.decimal "pay_rate", precision: 10, scale: 2
+    t.string "pay_type", default: "hourly"
+    t.string "status", default: "active"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "required_languages"
+    t.string "color", default: "#3B82F6"
+    t.index ["organization_id"], name: "index_jobs_on_organization_id"
+    t.index ["status"], name: "index_jobs_on_status"
   end
 
   create_table "organizations", force: :cascade do |t|
@@ -61,7 +91,9 @@ ActiveRecord::Schema[7.0].define(version: 2025_06_29_152320) do
     t.string "status", default: "scheduled"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "job_id"
     t.index ["assigned_user_id"], name: "index_shifts_on_assigned_user_id"
+    t.index ["job_id"], name: "index_shifts_on_job_id"
     t.index ["organization_id"], name: "index_shifts_on_organization_id"
     t.index ["start_time"], name: "index_shifts_on_start_time"
   end

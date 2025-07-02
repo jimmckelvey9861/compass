@@ -20,6 +20,13 @@
   Schedule Manager
 <% end %>
 
+<%= link_to managers_jobs_path, class: "text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md #{'bg-gray-900 text-white' if current_page?(managers_jobs_path)}" do %>
+  <svg class="sidebar-icon mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round" d="M12 2a2 2 0 012 2v1h3a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h3V4a2 2 0 012-2h2zm0 2h-2v1h2V4zm-5 3H5v10h12V7h-2" />
+  </svg>
+  Job Positions
+<% end %>
+
 <%= link_to managers_timesheets_path, class: "text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md #{'bg-gray-900 text-white' if current_page?(managers_timesheets_path)}" do %>
   <svg class="sidebar-icon mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2">
     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />

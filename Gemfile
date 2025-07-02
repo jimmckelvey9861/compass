@@ -18,7 +18,8 @@ source "https://gems.vip.global.square" do
   gem "logger", "~> 1.7.0"
   gem "browser"
   gem 'foreman', require: false
-
+  # gem 'faker'
+  
   group :development, :test do
     gem "debug"
     gem "rspec-rails"

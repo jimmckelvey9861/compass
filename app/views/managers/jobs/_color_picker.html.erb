@@ -1,0 +1,86 @@
+<div class="sm:col-span-6">
+  <%= f.label :color, "Color Tag", class: "block text-sm font-medium text-gray-700" %>
+  <div class="mt-2">
+    <div class="grid grid-cols-6 gap-3 sm:grid-cols-8 lg:grid-cols-12" id="color-picker">
+      <% Job::COLOR_PALETTE.each do |color| %>
+        <div class="relative">
+          <input type="radio" name="job[color]" value="<%= color %>" 
+                id="color_<%= color.delete('#') %>"
+                class="peer sr-only" <%= 'checked' if @job.color == color %>>
+          <label for="color_<%= color.delete('#') %>"
+                class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 peer-checked:border-gray-900"
+                style="background-color: <%= color %>;"
+                data-color="<%= color %>">
+            <svg class="h-6 w-6 text-white opacity-0 checkmark" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </label>
+        </div>
+      <% end %>
+    </div>
+    <div class="mt-3">
+      <label class="block text-sm font-medium text-gray-700">Custom Color</label>
+      <div class="mt-1 flex rounded-md shadow-sm">
+        <%= f.text_field :color, 
+            id: 'job_color_custom',
+            class: "block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm",
+            placeholder: "#000000" %>
+        <div class="ml-2 w-10 h-10 rounded border" id="color_preview" style="background-color: <%= @job.color || '#3B82F6' %>;"></div>
+      </div>
+    </div>
+  </div>
+  <p class="mt-2 text-sm text-gray-500">Choose a color to help identify this job position.</p>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize checkmarks
+  const initialColor = document.querySelector('input[name="job[color]"]:checked');
+  if (initialColor) {
+    const label = document.querySelector(`label[for="color_${initialColor.value.slice(1)}"]`);
+    label.querySelector('.checkmark').classList.remove('opacity-0');
+  }
+
+  // Color picker click handling
+  const colorPicker = document.getElementById('color-picker');
+  const customInput = document.getElementById('job_color_custom');
+  const preview = document.getElementById('color_preview');
+
+  colorPicker.addEventListener('click', function(e) {
+    const label = e.target.closest('label[data-color]');
+    if (!label) return;
+
+    const color = label.dataset.color;
+    
+    // Update radio button
+    const radio = document.getElementById(`color_${color.slice(1)}`);
+    radio.checked = true;
+
+    // Update custom input and preview
+    customInput.value = color;
+    preview.style.backgroundColor = color;
+
+    // Update checkmarks
+    document.querySelectorAll('.checkmark').forEach(mark => mark.classList.add('opacity-0'));
+    label.querySelector('.checkmark').classList.remove('opacity-0');
+  });
+
+  // Custom color input handling
+  customInput.addEventListener('input', function(e) {
+    const color = e.target.value;
+    preview.style.backgroundColor = color;
+    
+    // Clear all radio selections and checkmarks
+    document.querySelectorAll('input[name="job[color]"]').forEach(input => input.checked = false);
+    document.querySelectorAll('.checkmark').forEach(mark => mark.classList.add('opacity-0'));
+
+    // If color matches a palette color, select it
+    const matchingRadio = document.querySelector(`input[value="${color}"]`);
+    if (matchingRadio) {
+      matchingRadio.checked = true;
+      const label = document.querySelector(`label[for="${matchingRadio.id}"]`);
+      label.querySelector('.checkmark').classList.remove('opacity-0');
+    }
+  });
+});
+</script>
