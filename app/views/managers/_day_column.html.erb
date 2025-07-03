@@ -67,8 +67,8 @@
          data-max-concurrent="<%= max_concurrent %>"
          data-position="<%= position %>"
          data-day-view="<%= local_assigns[:day_view] == true %>"
-         style="top: <%= ((shift_start_hour - start_hour) * 30) %>px;
-                height: <%= (duration_hours * 30) %>px;
+         style="top: calc(<%= shift_start_hour - start_hour %> * var(--hour-height));
+                height: calc(<%= duration_hours %> * var(--hour-height));
                 background-color: <%= bg_color %>;
                 border: 1px solid rgba(255, 255, 255, 0.5);">
       <div class="name-container absolute inset-0 flex items-center justify-center text-white overflow-hidden">
