@@ -30,18 +30,27 @@ class ManagersController < ApplicationController
 
   def schedule
     @organization = Organization.first
-    @week_start = (params[:week_start] ? Date.parse(params[:week_start]) : Date.current).beginning_of_week
-    @week_end = @week_start.end_of_week
     
+    # Set view type with 'week' as default
+    @view_type = params[:view_type] || 'week'
+    
+    # Get the start date and week range
+    @week_start = (params[:week_start] ? Date.parse(params[:week_start]) : Date.current)
+    # Only use beginning_of_week for week view
+    @week_start = @week_start.beginning_of_week if @view_type == 'week'
+    @week_end = @view_type == 'week' ? @week_start.end_of_week : @week_start
+
     # Get unique locations and selected location
     @locations = Shift.where(organization_id: @organization.id).distinct.pluck(:location).sort
     @selected_location = params[:location] || @locations.first
     
+    # Get shifts based on view type
+    date_range = @view_type == 'week' ? (@week_start..@week_end) : (@week_start.beginning_of_day..@week_start.end_of_day)
     @shifts = Shift.where(
       organization_id: @organization.id,
-      start_time: @week_start..@week_end,
+      start_time: date_range,
       location: @selected_location
-    ).includes(:assigned_user)
+    ).includes(:assigned_user, :job)
     
     @employees = User.where(
       organization_id: @organization.id,

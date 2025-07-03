@@ -1,0 +1,161 @@
+<%# _day_column.html.erb %>
+<div class="border-r relative overflow-hidden" data-date="<%= date.strftime('%Y-%m-%d') %>">
+  <%
+    # Get shifts for this day
+    day_shifts = @shifts.select { |shift| shift.start_time.to_date == date }
+    
+    # Track column usage over time using 15-minute intervals
+    time_slots = {}
+    column_assignments = {}  # Maps shifts to their assigned columns
+    
+    # Sort shifts by start time to ensure optimal column packing
+    sorted_shifts = day_shifts.sort_by { |shift| [shift.start_time, -shift.end_time.to_i] }
+    
+    sorted_shifts.each do |shift|
+      # Convert times to decimal hours for more precise comparison
+      shift_start = shift.start_time.hour + (shift.start_time.min / 60.0)
+      shift_end = shift.end_time.hour + (shift.end_time.min / 60.0)
+      
+      # Find conflicting shifts - any shift that overlaps with current shift's time range
+      conflicting_shifts = column_assignments.keys.select do |existing_shift|
+        existing_start = existing_shift.start_time.hour + (existing_shift.start_time.min / 60.0)
+        existing_end = existing_shift.end_time.hour + (existing_shift.end_time.min / 60.0)
+        
+        # Shifts overlap if one starts before the other ends
+        # Using < instead of <= allows shifts to start exactly when another ends
+        shift_start < existing_end && existing_start < shift_end
+      end
+      
+      # Get columns used by conflicting shifts
+      used_columns = conflicting_shifts.map { |s| column_assignments[s] }.compact.to_set
+      
+      # Find the lowest available column number
+      next_column = 0
+      while used_columns.include?(next_column)
+        next_column += 1
+      end
+      
+      # Assign this column to the shift
+      column_assignments[shift] = next_column
+    end
+    
+    # Calculate maximum concurrent shifts for column width
+    max_concurrent = column_assignments.values.max || 0
+    max_concurrent += 1 # Add room for one more potential shift
+    
+    # Display shifts with calculated positions
+    sorted_shifts.each do |shift|
+      shift_start_hour = shift.start_time.hour + (shift.start_time.min / 60.0)
+      shift_end_hour = shift.end_time.hour + (shift.end_time.min / 60.0)
+      duration_hours = shift_end_hour - shift_start_hour
+      position = column_assignments[shift]
+      
+      # Get colors from job if available
+      bg_color = shift.job&.color || '#E5E7EB'
+
+      # Format name as "FirstName L."
+      if shift.assigned_user
+        name_parts = shift.assigned_user.full_name.split
+        formatted_name = if name_parts.length > 1
+          "#{name_parts[0]} #{name_parts[-1][0]}."
+        else
+          name_parts[0]
+        end
+      end
+  %>
+    <div class="absolute rounded cursor-pointer hover:shadow-lg transition-shadow group bar-container"
+         data-max-concurrent="<%= max_concurrent %>"
+         data-position="<%= position %>"
+         data-day-view="<%= local_assigns[:day_view] == true %>"
+         style="top: <%= ((shift_start_hour - start_hour) * 30) %>px;
+                height: <%= (duration_hours * 30) %>px;
+                background-color: <%= bg_color %>;
+                border: 1px solid rgba(255, 255, 255, 0.5);">
+      <div class="name-container absolute inset-0 flex items-center justify-center text-white overflow-hidden">
+        <% if shift.assigned_user %>
+          <span class="font-medium name-text"><%= formatted_name %></span>
+        <% else %>
+          <span class="font-medium name-text">Open</span>
+        <% end %>
+      </div>
+      
+      <style>
+        /* Add styles for dynamic text scaling */
+        .bar-container {
+          transition: all 0.2s ease-out;
+        }
+        .name-container {
+          opacity: 0;
+          transition: opacity 0.2s ease-out;
+        }
+        .name-text {
+          transform-origin: center center;
+          white-space: nowrap;
+          transition: all 0.2s ease-out;
+        }
+      </style>
+      
+      <script>
+        (function() {
+          const container = document.currentScript.parentElement;
+          const nameContainer = container.querySelector('.name-container');
+          const nameText = container.querySelector('.name-text');
+          const maxConcurrent = parseInt(container.dataset.maxConcurrent);
+          const position = parseInt(container.dataset.position);
+          const isDayView = container.dataset.dayView === 'true';
+          
+          function updateBarSize() {
+            const columnWidth = container.parentElement.offsetWidth;
+            const rightPadding = columnWidth * 0.05; // 5% of column width for right padding
+            // Use 1px spacing between bars, but subtract the right padding from available space
+            const maxBarWidth = (columnWidth - rightPadding - (maxConcurrent * 1)) / maxConcurrent;
+            const barWidth = Math.max(2, maxBarWidth);
+            
+            // Position and size the bar with 1px spacing
+            container.style.width = barWidth + 'px';
+            container.style.left = (position * (barWidth + 1)) + 'px';
+            
+            // Handle text visibility and rotation
+            if (barWidth >= 12) {
+              nameContainer.style.opacity = '1';
+              // Scale text larger in day view
+              const textScale = isDayView ? 
+                Math.min(1.5, barWidth / 40) : // Day view: larger text
+                Math.min(1.2, barWidth / 30);  // Week view: normal text
+              nameText.style.fontSize = (textScale * (isDayView ? 1.25 : 1.125)) + 'rem';
+              
+              // Rotate text if bar is taller than it is wide
+              if (container.offsetHeight > barWidth) {
+                nameText.style.transform = 'rotate(-90deg)';
+              } else {
+                nameText.style.transform = 'none';
+              }
+            } else {
+              nameContainer.style.opacity = '0';
+            }
+          }
+          
+          // Initial update
+          updateBarSize();
+          
+          // Update on window resize
+          window.addEventListener('resize', updateBarSize);
+        })();
+      </script>
+      
+      <%# Hover details - show horizontally %>
+      <div class="absolute left-full top-0 ml-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+        <div class="font-medium">
+          <%= shift.assigned_user ? shift.assigned_user.full_name : "Unassigned" %>
+        </div>
+        <% if shift.job %>
+          <div class="text-gray-300"><%= shift.job.name %></div>
+        <% end %>
+        <div class="text-gray-400">
+          <%= shift.start_time.strftime("%l:%M%P").strip %> - 
+          <%= shift.end_time.strftime("%l:%M%P").strip %>
+        </div>
+      </div>
+    </div>
+  <% end # end sorted_shifts.each %>
+</div>
