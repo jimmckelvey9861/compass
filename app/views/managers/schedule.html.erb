@@ -1,70 +1,42 @@
-<%# schedule.html.erb %>
-
-<%# Include schedule.js through asset pipeline %>
-<%= javascript_include_tag "schedule", defer: true %>
-
 <%# Container %>
-<div class="container mx-auto px-4">
-  <%# Header Section - Single Row %>
-  <style>
-    /* Hide Schedule text when space gets tight */
-    @media (max-width: 640px) {
-      .header-title {
-        display: none;
-      }
-    }
-    @media (max-width: 440px) {
-      /* Ensure view toggle buttons don't shrink */
-      .view-toggle-btn {
-        flex-shrink: 0;
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-      }
-      /* Allow location dropdown to shrink more */
-      .location-select {
-        max-width: 100px;
-      }
-    }
-  </style>
-
-  <div class="flex items-center justify-between py-2 px-2 sm:px-4 bg-white border-b min-w-0">
-    <%# Left: Title %>
-    <h1 class="header-title text-lg sm:text-xl font-semibold text-gray-800">Schedule</h1>
-    
-    <%# Center: Location and View Controls %>
-    <div class="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-grow justify-center">
+<div class="container mx-auto">
+  <%# Location and Controls Bar %>
+  <div class="bg-white shadow mb-4 flex items-center justify-between min-w-0 p-2">
+    <%# Location Selector %>
+    <div class="flex items-center min-w-0">
       <%= form_tag managers_schedule_path, method: :get, class: "flex items-center min-w-0" do %>
         <%= hidden_field_tag :week_start, @week_start.to_date %>
         <%= hidden_field_tag :view_type, @view_type %>
         <%= select_tag :location, 
             options_for_select(@locations, @selected_location),
-            class: "location-select h-8 text-sm bg-gray-50 border-gray-200 rounded px-1 sm:px-2 focus:ring-1 focus:ring-blue-500 max-w-[120px] sm:max-w-none truncate",
+            class: "h-8 text-sm bg-gray-50 border-gray-200 rounded px-2 focus:ring-1 focus:ring-blue-500 truncate",
             onchange: "this.form.submit();" %>
       <% end %>
+    </div>
 
-      <div class="flex h-8 rounded overflow-hidden border border-gray-200 divide-x shrink-0">
-        <%= link_to managers_schedule_path(view_type: 'week', week_start: @week_start, location: @selected_location),
-            class: "view-toggle-btn px-2 sm:px-3 flex items-center text-sm #{@view_type == 'week' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}" do %>
-          Week
-        <% end %>
-        <%= link_to managers_schedule_path(view_type: 'day', week_start: @week_start, location: @selected_location),
-            class: "view-toggle-btn px-2 sm:px-3 flex items-center text-sm #{@view_type == 'day' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}" do %>
-          Day
-        <% end %>
-      </div>
+    <%# Center: View Controls %>
+    <div class="flex h-8 rounded overflow-hidden border border-gray-200 divide-x shrink-0">
+      <%= link_to managers_schedule_path(view_type: 'week', week_start: @week_start, location: @selected_location),
+          class: "px-3 flex items-center text-sm #{@view_type == 'week' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}" do %>
+        Week
+      <% end %>
+      <%= link_to managers_schedule_path(view_type: 'day', week_start: @week_start, location: @selected_location),
+          class: "px-3 flex items-center text-sm #{@view_type == 'day' ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}" do %>
+        Day
+      <% end %>
     </div>
     
     <%# Right: Navigation %>
-    <div class="flex items-center gap-1 sm:gap-2 text-sm shrink-0 ml-auto pl-1.5">
+    <div class="flex items-center gap-2 text-sm">
       <% if @view_type == 'week' %>
         <%= link_to managers_schedule_path(view_type: 'week', week_start: @week_start - 1.week, location: @selected_location), 
-            class: "h-8 px-1.5 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600 shrink-0" do %>
+            class: "h-8 px-2 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600" do %>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         <% end %>
         
-        <span class="text-gray-700 font-medium shrink-0">
+        <span class="text-gray-700 font-medium whitespace-nowrap">
           <%# Full date format for larger screens %>
           <span class="hidden lg:inline">
             <%= @week_start.strftime("%b %-d") %> - <%= @week_end.strftime("%b %-d") %>
@@ -80,20 +52,20 @@
         </span>
         
         <%= link_to managers_schedule_path(view_type: 'week', week_start: @week_start + 1.week, location: @selected_location),
-            class: "h-8 px-1.5 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600 shrink-0" do %>
+            class: "h-8 px-2 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600" do %>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
         <% end %>
       <% else %>
         <%= link_to managers_schedule_path(view_type: 'day', week_start: @week_start - 1.day, location: @selected_location), 
-            class: "h-8 px-1.5 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600 shrink-0" do %>
+            class: "h-8 px-2 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600" do %>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
         <% end %>
         
-        <span class="text-gray-700 font-medium shrink-0">
+        <span class="text-gray-700 font-medium whitespace-nowrap">
           <%# Full date format for larger screens %>
           <span class="hidden lg:inline">
             <%= @week_start.strftime("%a, %b %-d") %>
@@ -109,7 +81,7 @@
         </span>
         
         <%= link_to managers_schedule_path(view_type: 'day', week_start: @week_start + 1.day, location: @selected_location),
-            class: "h-8 px-1.5 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600 shrink-0" do %>
+            class: "h-8 px-2 flex items-center rounded bg-gray-50 hover:bg-gray-100 text-gray-600" do %>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
@@ -207,6 +179,9 @@
         "#{display_hour}#{minute_str}#{meridian}"
       end
     %>
+
+    <%# Include schedule.js through asset pipeline %>
+    <%= javascript_include_tag "schedule", defer: true %>
 
     <%# Schedule Container with dynamic height %>
     <div id="scheduleContainer" class="bg-white rounded-lg shadow max-h-[calc(100vh-96px)]">

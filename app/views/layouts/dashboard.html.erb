@@ -99,41 +99,20 @@
 
     <!-- Main content area -->
     <div class="flex flex-1 flex-col md:pl-64">
-      <!-- Top header -->
-      <header class="sticky top-0 z-10 bg-white shadow">
-        <div class="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <!-- Mobile menu button -->
-          <button 
-            type="button" 
-            class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden"
-            @click="sidebarOpen = true">
-            <span class="sr-only">Open menu</span>
-            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-            </svg>
-          </button>
-
-          <!-- Page title -->
-          <div class="flex flex-1 items-center justify-between md:justify-start">
-            <h1 class="ml-3 text-2xl font-bold text-gray-900">
-              <%= content_for?(:page_title) ? yield(:page_title) : 'Dashboard' %>
-            </h1>
-          </div>
-
-          <!-- Right side placeholder for future use -->
-          <div class="flex items-center gap-4">
-            <div class="h-8 w-8 rounded-full bg-gray-200"></div>
-          </div>
-        </div>
-      </header>
+      <!-- Mobile menu button - only shown on mobile -->
+      <button 
+        type="button" 
+        class="fixed top-4 left-4 z-50 inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 md:hidden bg-white shadow"
+        @click="sidebarOpen = true">
+        <span class="sr-only">Open menu</span>
+        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+      </button>
 
       <!-- Main content -->
       <main class="flex-1">
-        <div class="py-6">
-          <div class="mx-auto px-4 sm:px-6 lg:px-8">
-            <%= yield %>
-          </div>
-        </div>
+        <%= yield %>
       </main>
     </div>
   </div>
