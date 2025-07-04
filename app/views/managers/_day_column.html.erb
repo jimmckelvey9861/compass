@@ -95,54 +95,6 @@
         }
       </style>
       
-      <script>
-        (function() {
-          const container = document.currentScript.parentElement;
-          const nameContainer = container.querySelector('.name-container');
-          const nameText = container.querySelector('.name-text');
-          const maxConcurrent = parseInt(container.dataset.maxConcurrent);
-          const position = parseInt(container.dataset.position);
-          const isDayView = container.dataset.dayView === 'true';
-          
-          function updateBarSize() {
-            const columnWidth = container.parentElement.offsetWidth;
-            const rightPadding = columnWidth * 0.05; // 5% of column width for right padding
-            // Use 1px spacing between bars, but subtract the right padding from available space
-            const maxBarWidth = (columnWidth - rightPadding - (maxConcurrent * 1)) / maxConcurrent;
-            const barWidth = Math.max(2, maxBarWidth);
-            
-            // Position and size the bar with 1px spacing
-            container.style.width = barWidth + 'px';
-            container.style.left = (position * (barWidth + 1)) + 'px';
-            
-            // Handle text visibility and rotation
-            if (barWidth >= 12) {
-              nameContainer.style.opacity = '1';
-              // Scale text larger in day view
-              const textScale = isDayView ? 
-                Math.min(1.5, barWidth / 40) : // Day view: larger text
-                Math.min(1.2, barWidth / 30);  // Week view: normal text
-              nameText.style.fontSize = (textScale * (isDayView ? 1.25 : 1.125)) + 'rem';
-              
-              // Rotate text if bar is taller than it is wide
-              if (container.offsetHeight > barWidth) {
-                nameText.style.transform = 'rotate(-90deg)';
-              } else {
-                nameText.style.transform = 'none';
-              }
-            } else {
-              nameContainer.style.opacity = '0';
-            }
-          }
-          
-          // Initial update
-          updateBarSize();
-          
-          // Update on window resize
-          window.addEventListener('resize', updateBarSize);
-        })();
-      </script>
-      
       <%# Hover details - show horizontally %>
       <div class="absolute left-full top-0 ml-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
         <div class="font-medium">

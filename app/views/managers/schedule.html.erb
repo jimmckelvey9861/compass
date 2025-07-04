@@ -1,3 +1,8 @@
+<%# schedule.html.erb %>
+
+<%# Include schedule.js through asset pipeline %>
+<%= javascript_include_tag "schedule", defer: true %>
+
 <%# Container %>
 <div class="container mx-auto px-4">
   <%# Header Section - Single Row %>
@@ -203,49 +208,13 @@
       end
     %>
 
-    <%# Add JavaScript for dynamic height calculation %>
-    <script>
-      function updateScheduleHeight() {
-        const scheduleEl = document.getElementById('scheduleGrid');
-        if (!scheduleEl) return;
-
-        // Get available height (viewport height minus header and padding)
-        const headerHeight = 64; // Height of the header section
-        const bottomPadding = 32; // Padding at the bottom
-        const availableHeight = window.innerHeight - headerHeight - bottomPadding;
-        
-        // Calculate hour height based on available space
-        const hoursSpan = <%= hours_span %>;
-        const minTotalHeight = hoursSpan * <%= min_hour_height %>; // Minimum total height
-        const hourHeight = Math.max(<%= min_hour_height %>, Math.floor(availableHeight / hoursSpan));
-        
-        // Set CSS custom property for hour height
-        document.documentElement.style.setProperty('--hour-height', `${hourHeight}px`);
-        
-        // Set grid height
-        const totalHeight = hourHeight * hoursSpan;
-        scheduleEl.style.height = `${totalHeight}px`;
-        
-        // Add/remove scroll class based on height
-        const containerEl = document.getElementById('scheduleContainer');
-        if (containerEl) {
-          if (totalHeight > availableHeight) {
-            containerEl.classList.add('overflow-auto');
-          } else {
-            containerEl.classList.remove('overflow-auto');
-          }
-        }
-      }
-
-      // Update on load and resize
-      window.addEventListener('load', updateScheduleHeight);
-      window.addEventListener('resize', updateScheduleHeight);
-    </script>
-
     <%# Schedule Container with dynamic height %>
     <div id="scheduleContainer" class="bg-white rounded-lg shadow max-h-[calc(100vh-96px)]">
       <%# Schedule Content %>
-      <div class="relative" id="scheduleGrid" style="display: grid; grid-template-columns: 60px <%= @view_type == 'week' ? 'repeat(7, minmax(0, 1fr))' : '1fr' %>;">
+      <div class="relative" id="scheduleGrid" 
+           style="display: grid; grid-template-columns: 60px <%= @view_type == 'week' ? 'repeat(7, minmax(0, 1fr))' : '1fr' %>;"
+           data-hours-span="<%= hours_span %>"
+           data-min-hour-height="<%= min_hour_height %>">
         <%# Background grid lines - span all columns %>
         <div class="absolute inset-0 pointer-events-none">
           <% current_hour = start_hour %>
@@ -271,14 +240,15 @@
           <% end %>
         </div>
 
-      <%# Day columns %>
-      <% if @view_type == 'week' %>
-        <% @week_start.upto(@week_end).each do |date| %>
-          <%= render partial: 'day_column', locals: { date: date, start_hour: start_hour } %>
+        <%# Day columns %>
+        <% if @view_type == 'week' %>
+          <% @week_start.upto(@week_end).each do |date| %>
+            <%= render partial: 'day_column', locals: { date: date, start_hour: start_hour } %>
+          <% end %>
+        <% else %>
+          <%= render partial: 'day_column', locals: { date: @week_start, start_hour: start_hour, day_view: true } %>
         <% end %>
-      <% else %>
-        <%= render partial: 'day_column', locals: { date: @week_start, start_hour: start_hour, day_view: true } %>
-      <% end %>
+      </div>
     </div>
   </div>
 
