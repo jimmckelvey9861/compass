@@ -96,7 +96,7 @@
       </style>
       
       <%# Hover details - show horizontally %>
-      <div class="absolute left-full top-0 ml-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-10 shadow-lg">
+      <div class="fixed hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap z-[9999] transform shadow-lg">
         <div class="font-medium">
           <%= shift.assigned_user ? shift.assigned_user.full_name : "Unassigned" %>
         </div>
