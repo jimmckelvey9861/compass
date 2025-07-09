@@ -30,3 +30,4 @@ Organization
 - ERB templating
 - Progressive Web App capabilities
 - Color-coded UI with predefined palette
+- Uses Square/Block gems
