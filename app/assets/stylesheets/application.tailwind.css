@@ -46,7 +46,7 @@
   }
 
   .sidebar-nav-item {
-    @apply text-gray-300 hover:bg-gray-700 hover:text-white flex items-center px-2 py-2 text-sm font-medium rounded-md;
+    @apply text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-sm font-medium rounded-md;
   }
 
   .sidebar-nav-item-active {
