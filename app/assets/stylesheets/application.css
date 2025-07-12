@@ -1,10 +1,41 @@
-/*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
- */
+/* Nuclear option - disable ALL interactions in schedule */
+#scheduleContainer *,
+#scheduleGrid *,
+#scheduleHeader * {
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+}
+
+/* Re-enable ONLY what we need */
+.time-slot-drop-zone {
+  pointer-events: all !important;
+  position: absolute !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 100 !important; /* Ensure drop zones are above other elements */
+}
+
+.job-item[data-draggable="job-palette"] {
+  pointer-events: all !important;
+  z-index: 101 !important; /* Ensure dragged items are above drop zones */
+  cursor: grab !important;
+}
+
+.job-item[data-draggable="job-palette"].dragging {
+  cursor: grabbing !important;
+}
+
+/* Drop zone visual states */
+.drop-active {
+  background-color: rgba(0, 255, 0, 0.05) !important;
+  border: 2px solid rgba(0, 255, 0, 0.2) !important;
+}
+
+.dropzone-highlight {
+  background-color: rgba(0, 255, 0, 0.15) !important;
+  border: 2px dashed #00c853 !important;
+}
+

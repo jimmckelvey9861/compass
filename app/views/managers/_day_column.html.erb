@@ -110,4 +110,14 @@
       </div>
     </div>
   <% end # end sorted_shifts.each %>
+  <% slot_time = start_hour %>
+  <% while slot_time < end_hour %>
+    <div class="time-slot-drop-zone"
+         data-droppable="schedule-slot"
+         data-slot-start="<%= slot_time %>"
+         data-date="<%= date.strftime('%Y-%m-%d') %>"
+         style="position: absolute; left: 0; width: 100%; height: calc(var(--hour-height) * 0.25); top: calc((<%= slot_time - start_hour %>) * var(--hour-height)); z-index: 2;">
+    </div>
+    <% slot_time += 0.25 %>
+  <% end %>
 </div>

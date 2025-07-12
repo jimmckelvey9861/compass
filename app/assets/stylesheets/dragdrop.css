@@ -1,0 +1,23 @@
+/* Drag and Drop Fixes */
+.job-item {
+    background-color: red !important;
+    border: 5px solid yellow !important;
+  }
+  
+  #scheduleContainer *,
+  #scheduleGrid *,
+  #scheduleHeader * {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+  }
+  
+  .time-slot-drop-zone {
+    pointer-events: all !important;
+  }
+  
+  .job-item[data-draggable="job-palette"] {
+    pointer-events: all !important;
+  }

@@ -87,4 +87,35 @@ class ManagersController < ApplicationController
 
     redirect_to managers_schedule_path(week_start: @shift.start_time.to_date)
   end
+  def create_shift
+    @organization = Organization.first
+    
+    # Parse the parameters
+    job_id = params[:shift][:job_id]
+    start_date = Date.parse(params[:shift][:start_date])
+    start_time_decimal = params[:shift][:start_time].to_f
+    
+    # Convert decimal time to actual time
+    start_hour = start_time_decimal.floor
+    start_minute = ((start_time_decimal - start_hour) * 60).round
+    start_datetime = start_date.beginning_of_day + start_hour.hours + start_minute.minutes
+    
+    # Default 4-hour shift - you can modify this
+    end_datetime = start_datetime + 4.hours
+    
+    @shift = Shift.new(
+      organization_id: @organization.id,
+      job_id: job_id,
+      start_time: start_datetime,
+      end_time: end_datetime,
+      location: params[:location] || 'Downtown Store', # Use current location
+      assigned_user_id: nil # Initially unassigned
+    )
+    
+    if @shift.save
+      render json: { success: true, shift_id: @shift.id }
+    else
+      render json: { success: false, errors: @shift.errors.full_messages }
+    end
+  end  
 end

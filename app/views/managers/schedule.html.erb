@@ -90,153 +90,173 @@
     </div>
   </div>
 
-  <%# Schedule Grid %>
-  <div class="bg-white rounded-lg shadow overflow-hidden">
-    <%# Day Headers %>
-    <div class="relative border-b shadow-sm" id="scheduleHeader" 
-         style="height: 36px; display: grid; grid-template-columns: 60px <%= @view_type == 'week' ? 'repeat(7, minmax(0, 1fr))' : '1fr' %>;">
-      <%# Time column header %>
-      <div class="border-r bg-gray-50 w-[60px] flex items-center justify-center border-gray-200">
-        <span class="text-sm font-medium text-gray-600">Time</span>
-      </div>
-      
-      <% if @view_type == 'week' %>
-        <% @week_start.upto(@week_end).each do |date| %>
-          <% is_weekend = date.saturday? || date.sunday? %>
-          <div class="border-r border-gray-200 <%= is_weekend ? 'bg-gray-50/80' : 'bg-white' %> flex items-center justify-center overflow-hidden"
-               data-date="<%= date.strftime('%Y-%m-%d') %>">
-            <%= link_to managers_schedule_path(view_type: 'day', week_start: date, location: @selected_location),
-                class: "w-full h-full flex items-center justify-center hover:bg-gray-50 transition-colors" do %>
-              <%# Full format: "Mon 30" - shown at widest widths %>
-              <div class="text-sm tracking-tight hidden md:flex flex-col lg:flex-row items-center gap-0 lg:gap-1">
-                <span class="font-semibold text-gray-700"><%= date.strftime("%a") %></span>
-                <span class="text-gray-600"><%= date.strftime("%-d") %></span>
+  <%# Main Content Area: Sidebar + Schedule Grid %>
+  <div class="flex gap-4">
+    <%# Job Palette Sidebar %>
+    <div class="w-64 flex-shrink-0">
+      <div class="bg-white rounded-lg shadow p-4 mb-4">
+        <h3 class="text-lg font-medium text-gray-800 mb-3">Job Palette</h3>
+        <div class="space-y-2">
+          <% @jobs.each do |job| %>
+            <div class="job-item bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-blue-50 transition-colors border border-gray-200"
+                 data-job-id="<%= job.id %>"
+                 data-job-name="<%= job.name %>"
+                 data-job-color="<%= job.color %>"
+                 data-draggable="job-palette"
+                 tabindex="0"
+                 role="button"
+                 aria-grabbed="false">
+              <div class="flex items-center gap-3">
+                <div class="w-4 h-4 rounded-full flex-shrink-0" style="background-color: <%= job.color %>;"></div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-sm font-medium text-gray-900 truncate"><%= job.name %></div>
+                  <div class="text-xs text-gray-500 job-palette-label">Click here</div>
+                </div>
+                <div class="text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                  </svg>
+                </div>
               </div>
-              <%# Medium format: just the number with weekday above - shown at medium widths %>
-              <div class="text-sm tracking-tight hidden sm:flex md:hidden flex-col items-center">
-                <span class="text-xs text-gray-500"><%= date.strftime("%a") %></span>
-                <span class="font-medium text-gray-600"><%= date.strftime("%-d") %></span>
-              </div>
-              <%# Minimal format: just the date - shown at smallest widths %>
-              <div class="text-sm font-medium text-gray-600 sm:hidden text-center">
-                <%= date.strftime("%-d") %>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
-      <% else %>
-        <div class="border-r border-gray-200 bg-white flex items-center justify-center px-3" data-date="<%= @week_start.strftime('%Y-%m-%d') %>">
-          <%# Full format %>
-          <div class="text-sm tracking-tight hidden sm:block text-center">
-            <span class="font-semibold text-gray-700"><%= @week_start.strftime("%A") %></span>
-            <span class="ml-1.5 text-gray-600"><%= @week_start.strftime("%B %-d") %></span>
-          </div>
-          <%# Compact format %>
-          <div class="text-sm tracking-tight sm:hidden text-center">
-            <span class="font-semibold text-gray-700"><%= @week_start.strftime("%a") %></span>
-            <span class="ml-1 text-gray-600"><%= @week_start.strftime("%b %-d") %></span>
-          </div>
-        </div>
-      <% end %>
-    </div>
-
-    <%# Calculate time range and height based on shifts %>
-    <%
-      # Find earliest and latest times
-      earliest_time = @shifts.min_by { |s| s.start_time.seconds_since_midnight }&.start_time
-      latest_time = @shifts.max_by { |s| s.end_time.seconds_since_midnight }&.end_time
-
-      if earliest_time && latest_time
-        # Calculate exact hours including fractional parts
-        start_hour = (earliest_time.hour + earliest_time.min / 60.0) - 0.5  # Subtract 30 minutes
-        end_hour = (latest_time.hour + latest_time.min / 60.0) + 0.5       # Add 30 minutes
-        
-        # Round start down and end up to nearest 15 minutes (0.25 hour)
-        start_hour = (start_hour / 0.25).floor * 0.25
-        end_hour = (end_hour / 0.25).ceil * 0.25
-        
-        # Ensure we stay within 24-hour bounds
-        start_hour = [start_hour, 0].max
-        end_hour = [end_hour, 24].min
-      else
-        # Default range if no shifts
-        start_hour = 8
-        end_hour = 18
-      end
-
-      hours_span = end_hour - start_hour
-      min_hour_height = 20 # Minimum height per hour in pixels
-      
-      # Helper method to format time for labels
-      def format_time(hour, minute = 0)
-        # For fractional hours, calculate the actual hour and minutes
-        actual_hour = hour.floor
-        actual_minutes = ((hour - actual_hour) * 60).round
-        
-        meridian = actual_hour >= 12 ? 'p' : 'a'
-        display_hour = actual_hour == 0 ? 12 : (actual_hour > 12 ? actual_hour - 12 : actual_hour)
-        minute_str = actual_minutes > 0 ? ":%02d" % actual_minutes : ""
-        "#{display_hour}#{minute_str}#{meridian}"
-      end
-    %>
-
-    <%# Schedule Container with dynamic height %>
-    <div id="scheduleContainer" class="bg-white rounded-lg shadow max-h-[calc(100vh-96px)]">
-      <%# Schedule Content %>
-      <div class="relative" id="scheduleGrid" 
-           style="display: grid; grid-template-columns: 60px <%= @view_type == 'week' ? 'repeat(7, minmax(0, 1fr))' : '1fr' %>;"
-           data-hours-span="<%= hours_span %>"
-           data-min-hour-height="<%= min_hour_height %>">
-        <%# Background grid lines - span all columns %>
-        <div class="absolute inset-0 pointer-events-none">
-          <% current_hour = start_hour %>
-          <% while current_hour <= end_hour %>
-            <% is_hour = (current_hour % 1.0).zero? %>
-            <div class="absolute w-full border-t <%= is_hour ? 'border-gray-100' : 'border-gray-50' %>"
-                 style="top: calc((<%= current_hour - start_hour %> * var(--hour-height)))">
             </div>
-            <% current_hour += 0.25 # Add 15 minutes (0.25 hours) %>
           <% end %>
         </div>
-
-        <%# Time labels column - fixed width %>
-        <div class="border-r relative w-[60px]">
-          <%# Time labels - only show at full hours %>
-          <% ((start_hour.floor)..(end_hour.ceil)).each do |hour| %>
-            <% if hour >= start_hour && hour <= end_hour %>
-              <div class="absolute w-full text-xs text-gray-500 pl-1"
-                   style="top: calc(<%= hour - start_hour %> * var(--hour-height))">
-                <%= format_time(hour) %>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
-
-        <%# Day columns %>
-        <% if @view_type == 'week' %>
-          <% @week_start.upto(@week_end).each do |date| %>
-            <%= render partial: 'day_column', locals: { date: date, start_hour: start_hour } %>
-          <% end %>
-        <% else %>
-          <%= render partial: 'day_column', locals: { date: @week_start, start_hour: start_hour, day_view: true } %>
-        <% end %>
       </div>
     </div>
-  </div>
-
-  <%# Legend %>
-  <div class="mt-6 bg-white rounded-lg shadow p-4">
-    <h3 class="text-lg font-medium text-gray-800 mb-3">Legend</h3>
-    <div class="flex flex-wrap gap-4">
-      <% @jobs.each do |job| %>
-        <div class="flex items-center">
-          <div class="w-4 h-4 rounded mr-2" style="background-color: <%= job.color %>; border: 1px solid rgba(255, 255, 255, 0.5);"></div>
-          <span class="text-sm text-gray-600"><%= job.name %></span>
+    <%# Schedule Grid (existing code) %>
+    <div class="flex-1">
+      <%# Schedule Grid %>
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <%# Day Headers %>
+        <div class="relative border-b shadow-sm" id="scheduleHeader" 
+             style="height: 36px; display: grid; grid-template-columns: 60px <%= @view_type == 'week' ? 'repeat(7, minmax(0, 1fr))' : '1fr' %>;">
+          <%# Time column header %>
+          <div class="border-r bg-gray-50 w-[60px] flex items-center justify-center border-gray-200">
+            <span class="text-sm font-medium text-gray-600">Time</span>
+          </div>
+          
+          <% if @view_type == 'week' %>
+            <% @week_start.upto(@week_end).each do |date| %>
+              <% is_weekend = date.saturday? || date.sunday? %>
+              <div class="border-r border-gray-200 <%= is_weekend ? 'bg-gray-50/80' : 'bg-white' %> flex items-center justify-center overflow-hidden"
+                   data-date="<%= date.strftime('%Y-%m-%d') %>">
+                <%= link_to managers_schedule_path(view_type: 'day', week_start: date, location: @selected_location),
+                    class: "w-full h-full flex items-center justify-center hover:bg-gray-50 transition-colors" do %>
+                  <%# Full format: "Mon 30" - shown at widest widths %>
+                  <div class="text-sm tracking-tight hidden md:flex flex-col lg:flex-row items-center gap-0 lg:gap-1">
+                    <span class="font-semibold text-gray-700"><%= date.strftime("%a") %></span>
+                    <span class="text-gray-600"><%= date.strftime("%-d") %></span>
+                  </div>
+                  <%# Medium format: just the number with weekday above - shown at medium widths %>
+                  <div class="text-sm tracking-tight hidden sm:flex md:hidden flex-col items-center">
+                    <span class="text-xs text-gray-500"><%= date.strftime("%a") %></span>
+                    <span class="font-medium text-gray-600"><%= date.strftime("%-d") %></span>
+                  </div>
+                  <%# Minimal format: just the date - shown at smallest widths %>
+                  <div class="text-sm font-medium text-gray-600 sm:hidden text-center">
+                    <%= date.strftime("%-d") %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="border-r border-gray-200 bg-white flex items-center justify-center px-3" data-date="<%= @week_start.strftime('%Y-%m-%d') %>">
+              <%# Full format %>
+              <div class="text-sm tracking-tight hidden sm:block text-center">
+                <span class="font-semibold text-gray-700"><%= @week_start.strftime("%A") %></span>
+                <span class="ml-1.5 text-gray-600"><%= @week_start.strftime("%B %-d") %></span>
+              </div>
+              <%# Compact format %>
+              <div class="text-sm tracking-tight sm:hidden text-center">
+                <span class="font-semibold text-gray-700"><%= @week_start.strftime("%a") %></span>
+                <span class="ml-1 text-gray-600"><%= @week_start.strftime("%b %-d") %></span>
+              </div>
+            </div>
+          <% end %>
         </div>
-      <% end %>
-      <div class="flex items-center">
-        <div class="w-4 h-4 bg-gray-300 rounded mr-2" style="border: 1px solid rgba(255, 255, 255, 0.5);"></div>
-        <span class="text-sm text-gray-600">Unassigned</span>
+
+        <%# Calculate time range and height based on shifts %>
+        <%
+          # Find earliest and latest times
+          earliest_time = @shifts.min_by { |s| s.start_time.seconds_since_midnight }&.start_time
+          latest_time = @shifts.max_by { |s| s.end_time.seconds_since_midnight }&.end_time
+
+          if earliest_time && latest_time
+            # Calculate exact hours including fractional parts
+            start_hour = (earliest_time.hour + earliest_time.min / 60.0) - 0.5  # Subtract 30 minutes
+            end_hour = (latest_time.hour + latest_time.min / 60.0) + 0.5       # Add 30 minutes
+            
+            # Round start down and end up to nearest 15 minutes (0.25 hour)
+            start_hour = (start_hour / 0.25).floor * 0.25
+            end_hour = (end_hour / 0.25).ceil * 0.25
+            
+            # Ensure we stay within 24-hour bounds
+            start_hour = [start_hour, 0].max
+            end_hour = [end_hour, 24].min
+          else
+            # Default range if no shifts
+            start_hour = 8
+            end_hour = 18
+          end
+
+          hours_span = end_hour - start_hour
+          min_hour_height = 20 # Minimum height per hour in pixels
+          
+          # Helper method to format time for labels
+          def format_time(hour, minute = 0)
+            # For fractional hours, calculate the actual hour and minutes
+            actual_hour = hour.floor
+            actual_minutes = ((hour - actual_hour) * 60).round
+            
+            meridian = actual_hour >= 12 ? 'p' : 'a'
+            display_hour = actual_hour == 0 ? 12 : (actual_hour > 12 ? actual_hour - 12 : actual_hour)
+            minute_str = actual_minutes > 0 ? ":%02d" % actual_minutes : ""
+            "#{display_hour}#{minute_str}#{meridian}"
+          end
+        %>
+
+        <%# Schedule Container with dynamic height %>
+        <div id="scheduleContainer" class="bg-white rounded-lg shadow max-h-[calc(100vh-96px)]">
+          <%# Schedule Content %>
+          <div class="relative" id="scheduleGrid" 
+               style="display: grid; grid-template-columns: 60px <%= @view_type == 'week' ? 'repeat(7, minmax(0, 1fr))' : '1fr' %>;"
+               data-hours-span="<%= hours_span %>"
+               data-min-hour-height="<%= min_hour_height %>">
+            <%# Background grid lines - span all columns %>
+            <div class="absolute inset-0 pointer-events-none">
+              <% current_hour = start_hour %>
+              <% while current_hour <= end_hour %>
+                <% is_hour = (current_hour % 1.0).zero? %>
+                <div class="absolute w-full border-t <%= is_hour ? 'border-gray-100' : 'border-gray-50' %>"
+                     style="top: calc((<%= current_hour - start_hour %> * var(--hour-height)))">
+                </div>
+                <% current_hour += 0.25 # Add 15 minutes (0.25 hours) %>
+              <% end %>
+            </div>
+
+            <%# Time labels column - fixed width %>
+            <div class="border-r relative w-[60px]">
+              <%# Time labels - only show at full hours %>
+              <% ((start_hour.floor)..(end_hour.ceil)).each do |hour| %>
+                <% if hour >= start_hour && hour <= end_hour %>
+                  <div class="absolute w-full text-xs text-gray-500 pl-1"
+                       style="top: calc(<%= hour - start_hour %> * var(--hour-height))">
+                    <%= format_time(hour) %>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+
+            <%# Day columns %>
+            <% if @view_type == 'week' %>
+              <% @week_start.upto(@week_end).each do |date| %>
+                <%= render partial: 'day_column', locals: { date: date, start_hour: start_hour, end_hour: end_hour } %>
+              <% end %>
+            <% else %>
+              <%= render partial: 'day_column', locals: { date: @week_start, start_hour: start_hour, end_hour: end_hour, day_view: true } %>
+            <% end %>
+          </div>
+        </div>
       </div>
     </div>
   </div>

@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   get 'managers/dashboard', to: 'managers#dashboard', as: :managers_dashboard
   get 'managers/schedule', to: 'managers#schedule', as: :managers_schedule
   get 'managers/timesheets', to: 'managers#timesheets', as: :managers_timesheets
+  post 'managers/shifts', to: 'managers#create_shift'
   post 'shifts/:id/assign', to: 'managers#assign_shift', as: :assign_shift
 
   namespace :managers do
