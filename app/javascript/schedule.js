@@ -117,21 +117,38 @@ function initJobVisibilityDetection() {
 function updateShiftBars() {
   const shiftBars = document.querySelectorAll('.bar-container');
   
+  // First pass - count visible shifts per column to get maxConcurrent
+  const columnMaxConcurrent = new Map();
+  shiftBars.forEach(container => {
+    if (container.style.display === 'none') return; // Skip hidden shifts
+    const parent = container.parentElement;
+    const position = parseInt(container.dataset.position) || 0;
+    const currentMax = columnMaxConcurrent.get(parent) || 0;
+    columnMaxConcurrent.set(parent, Math.max(currentMax, position + 1));
+  });
+  
+  // Second pass - update each bar
   shiftBars.forEach(container => {
     const nameContainer = container.querySelector('.name-container');
     const nameText = container.querySelector('.name-text');
-    const maxConcurrent = parseInt(container.dataset.maxConcurrent) || 1;
     const position = parseInt(container.dataset.position) || 0;
     const isDayView = container.dataset.dayView === 'true';
+    const parent = container.parentElement;
     
-    const columnWidth = container.parentElement.offsetWidth;
+    // Use maxConcurrent from visible shifts only
+    const maxConcurrent = columnMaxConcurrent.get(parent) || 1;
+    
+    // Calculate width based on visible shifts
+    const columnWidth = parent.offsetWidth;
     const rightPadding = columnWidth * 0.05;
     const maxBarWidth = (columnWidth - rightPadding - (maxConcurrent * 1)) / maxConcurrent;
     const barWidth = Math.max(2, maxBarWidth);
     
+    // Keep original position but update width
     container.style.width = barWidth + 'px';
     container.style.left = (position * (barWidth + 1)) + 'px';
     
+    // Update text visibility and rotation
     if (barWidth >= 12) {
       nameContainer.style.opacity = '1';
       const textScale = isDayView ? 

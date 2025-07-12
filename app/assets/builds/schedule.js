@@ -2595,13 +2595,23 @@
   }
   function updateShiftBars() {
     const shiftBars = document.querySelectorAll(".bar-container");
+    const columnMaxConcurrent = /* @__PURE__ */ new Map();
+    shiftBars.forEach((container) => {
+      if (container.style.display === "none")
+        return;
+      const parent = container.parentElement;
+      const position = parseInt(container.dataset.position) || 0;
+      const currentMax = columnMaxConcurrent.get(parent) || 0;
+      columnMaxConcurrent.set(parent, Math.max(currentMax, position + 1));
+    });
     shiftBars.forEach((container) => {
       const nameContainer = container.querySelector(".name-container");
       const nameText = container.querySelector(".name-text");
-      const maxConcurrent = parseInt(container.dataset.maxConcurrent) || 1;
       const position = parseInt(container.dataset.position) || 0;
       const isDayView = container.dataset.dayView === "true";
-      const columnWidth = container.parentElement.offsetWidth;
+      const parent = container.parentElement;
+      const maxConcurrent = columnMaxConcurrent.get(parent) || 1;
+      const columnWidth = parent.offsetWidth;
       const rightPadding = columnWidth * 0.05;
       const maxBarWidth = (columnWidth - rightPadding - maxConcurrent * 1) / maxConcurrent;
       const barWidth = Math.max(2, maxBarWidth);
