@@ -7026,20 +7026,75 @@
     deduped: 0
   };
   console.log("[DND DEBUG] schedule.js loaded");
+  var STORAGE_KEY = "compass_job_visibility";
+  function loadVisibilityStates() {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const states = JSON.parse(stored);
+        console.log("[VISIBILITY] Loaded states:", states);
+        return states;
+      }
+    } catch (error) {
+      console.error("[VISIBILITY] Error loading states:", error);
+    }
+    return {};
+  }
+  function saveVisibilityState(jobId, visible) {
+    try {
+      const states = loadVisibilityStates();
+      states[jobId] = visible;
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(states));
+      console.log("[VISIBILITY] Saved states:", states);
+    } catch (error) {
+      console.error("[VISIBILITY] Error saving states:", error);
+    }
+  }
+  function updateShiftVisibility(jobId, visible) {
+    console.log("[VISIBILITY DEBUG] Looking for job_id:", jobId);
+    const shiftBars = document.querySelectorAll(`.bar-container[data-job-id="${jobId}"]`);
+    console.log("[VISIBILITY] Updating shift bars:", {
+      job: jobId,
+      visible,
+      shiftCount: shiftBars.length,
+      selectorTried: `[data-job-id="${jobId}"]`
+    });
+    shiftBars.forEach((bar) => {
+      bar.style.display = visible ? "block" : "none";
+    });
+    requestAnimationFrame(() => {
+      console.log("[VISIBILITY] Recalculating shift layout...");
+      updateShiftBars();
+    });
+  }
   function initJobVisibilityDetection() {
     console.log("[VISIBILITY] Initializing checkbox detection");
+    const savedStates = loadVisibilityStates();
     document.querySelectorAll('.job-item[data-draggable="job-palette"]').forEach((item) => {
       const checkbox = item.querySelector('input[type="checkbox"]');
       const jobId = item.dataset.jobId;
       const jobName = item.dataset.jobName;
       if (checkbox) {
+        if (jobId in savedStates) {
+          const isVisible = savedStates[jobId];
+          checkbox.checked = isVisible;
+          updateShiftVisibility(jobId, isVisible);
+          console.log("[VISIBILITY] Restored state for job:", {
+            job: jobName,
+            id: jobId,
+            visible: isVisible
+          });
+        }
         checkbox.addEventListener("change", (event) => {
+          const isVisible = event.target.checked;
           console.log("[VISIBILITY] Checkbox changed:", {
             job: jobName,
             id: jobId,
-            visible: event.target.checked,
+            visible: isVisible,
             timestamp: (/* @__PURE__ */ new Date()).toISOString()
           });
+          updateShiftVisibility(jobId, isVisible);
+          saveVisibilityState(jobId, isVisible);
         });
         console.log("[VISIBILITY] Added listener for job:", jobName);
       }

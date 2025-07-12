@@ -67,6 +67,7 @@
          data-max-concurrent="<%= max_concurrent %>"
          data-position="<%= position %>"
          data-day-view="<%= local_assigns[:day_view] == true %>"
+         data-job-id="<%= shift.job&.id %>"
          style="top: calc(<%= shift_start_hour - start_hour %> * var(--hour-height));
                 height: calc(<%= duration_hours %> * var(--hour-height));
                 background-color: <%= bg_color %>;

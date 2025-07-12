@@ -9,9 +9,68 @@ console.log('[DND DEBUG] schedule.js loaded');
 // Schedule management functionality
 import interact from 'interactjs';
 
+// Constants for storage
+const STORAGE_KEY = 'compass_job_visibility';
+
+// Load saved visibility states
+function loadVisibilityStates() {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const states = JSON.parse(stored);
+      console.log('[VISIBILITY] Loaded states:', states);
+      return states;
+    }
+  } catch (error) {
+    console.error('[VISIBILITY] Error loading states:', error);
+  }
+  return {};
+}
+
+// Save visibility state
+function saveVisibilityState(jobId, visible) {
+  try {
+    const states = loadVisibilityStates();
+    states[jobId] = visible;
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(states));
+    console.log('[VISIBILITY] Saved states:', states);
+  } catch (error) {
+    console.error('[VISIBILITY] Error saving states:', error);
+  }
+}
+
+// Update shift visibility
+function updateShiftVisibility(jobId, visible) {
+  // Debug: Log all bar-containers and their attributes
+  console.log('[VISIBILITY DEBUG] Looking for job_id:', jobId);
+  
+  // Find all shift bars for this job
+  const shiftBars = document.querySelectorAll(`.bar-container[data-job-id="${jobId}"]`);
+  console.log('[VISIBILITY] Updating shift bars:', {
+    job: jobId,
+    visible: visible,
+    shiftCount: shiftBars.length,
+    selectorTried: `[data-job-id="${jobId}"]`
+  });
+  
+  // Update visibility
+  shiftBars.forEach(bar => {
+    bar.style.display = visible ? 'block' : 'none';
+  });
+
+  // Recalculate layout and text rotation
+  requestAnimationFrame(() => {
+    console.log('[VISIBILITY] Recalculating shift layout...');
+    updateShiftBars();
+  });
+}
+
 // Initialize job visibility change detection
 function initJobVisibilityDetection() {
   console.log('[VISIBILITY] Initializing checkbox detection');
+  
+  // Load saved states
+  const savedStates = loadVisibilityStates();
   
   document.querySelectorAll('.job-item[data-draggable="job-palette"]').forEach(item => {
     const checkbox = item.querySelector('input[type="checkbox"]');
@@ -19,13 +78,35 @@ function initJobVisibilityDetection() {
     const jobName = item.dataset.jobName;
     
     if (checkbox) {
+      // Restore saved state if exists
+      if (jobId in savedStates) {
+        const isVisible = savedStates[jobId];
+        checkbox.checked = isVisible;
+        updateShiftVisibility(jobId, isVisible); // Apply visibility on load
+        console.log('[VISIBILITY] Restored state for job:', {
+          job: jobName,
+          id: jobId,
+          visible: isVisible
+        });
+      }
+      
+      // Add change listener
       checkbox.addEventListener('change', (event) => {
+        const isVisible = event.target.checked;
+        
+        // Log the change
         console.log('[VISIBILITY] Checkbox changed:', {
           job: jobName,
           id: jobId,
-          visible: event.target.checked,
+          visible: isVisible,
           timestamp: new Date().toISOString()
         });
+        
+        // Update shift visibility
+        updateShiftVisibility(jobId, isVisible);
+        
+        // Save the new state
+        saveVisibilityState(jobId, isVisible);
       });
       
       console.log('[VISIBILITY] Added listener for job:', jobName);
