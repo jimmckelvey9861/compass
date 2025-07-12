@@ -9,6 +9,30 @@ console.log('[DND DEBUG] schedule.js loaded');
 // Schedule management functionality
 import interact from 'interactjs';
 
+// Initialize job visibility change detection
+function initJobVisibilityDetection() {
+  console.log('[VISIBILITY] Initializing checkbox detection');
+  
+  document.querySelectorAll('.job-item[data-draggable="job-palette"]').forEach(item => {
+    const checkbox = item.querySelector('input[type="checkbox"]');
+    const jobId = item.dataset.jobId;
+    const jobName = item.dataset.jobName;
+    
+    if (checkbox) {
+      checkbox.addEventListener('change', (event) => {
+        console.log('[VISIBILITY] Checkbox changed:', {
+          job: jobName,
+          id: jobId,
+          visible: event.target.checked,
+          timestamp: new Date().toISOString()
+        });
+      });
+      
+      console.log('[VISIBILITY] Added listener for job:', jobName);
+    }
+  });
+}
+
 function updateShiftBars() {
   const shiftBars = document.querySelectorAll('.bar-container');
   
@@ -289,6 +313,7 @@ function initAll() {
   }
   
   console.log('[DND DEBUG] Initializing all drag and drop functionality');
+  initJobVisibilityDetection(); // Add this line
   initJobPaletteDraggable();
   initDropZones();
   initSchedule();
